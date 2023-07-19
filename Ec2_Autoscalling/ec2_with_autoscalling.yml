@@ -60,6 +60,7 @@ Resources:
       LaunchTemplateName: "newtemplate"
       LaunchTemplateData:
         ImageId: "ami-06e46074ae430fba6"
+        BlockDeviceMappings.Encrypted: "true"
         InstanceType: "t2.micro"
         KeyName: "minikube"
 
