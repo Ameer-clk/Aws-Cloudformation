@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources:
+  MainVPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: "172.20.0.0/16"
+
+  PublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref MainVPC
+      CidrBlock: "172.20.10.0/24"
+
+  PrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref MainVPC
+      CidrBlock: "172.20.30.0/24"
+
+  InternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      VpcId: !Ref MainVPC
+
+  MyRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref MainVPC
+
+  PublicRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref MyRouteTable
+
+  NewSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: "newsg"
+      GroupDescription: "For the ifra"
+      VpcId: !Ref MainVPC
+
+  ExampleAMI:
+    Type: "AWS::EC2::Image"
+    Properties:
+      Name: "terraform-example"
+      VirtualizationType: "hvm"
+      RootDeviceName: "/dev/xvda"
+      ImageId: "ami-06e46074ae430fba6"
+      BlockDeviceMappings:
+        - DeviceName: "/dev/xvda"
+          Ebs:
+            SnapshotId: "snap-0e9b82395b5fc5fb5"
+            VolumeSize: 100
+
+  NewLaunchTemplate:
+    Type: "AWS::EC2::LaunchTemplate"
+    Properties:
+      LaunchTemplateName: "newtemplate"
+      LaunchTemplateData:
+        ImageId: "ami-06e46074ae430fba6"
+        InstanceType: "t2.micro"
+        KeyName: "minikube"
+
+  MyTargetGroup:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: "mytg"
+      Port: 80
+      Protocol: "HTTP"
+      VpcId: !Ref MainVPC
+
+  MyLoadBalancer:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties:
+      Name: "my-lb"
+      Scheme: "internal"
+      LoadBalancerType: "application"
+      SecurityGroups:
+        - !Ref NewSecurityGroup
+      Subnets:
+        - !Ref PublicSubnet
+        - !Ref PrivateSubnet
+
+  MyAutoScalingGroup:
+    Type: "AWS::AutoScaling::AutoScalingGroup"
+    Properties:
+      AvailabilityZones:
+        - "us-east-1a"
+        - "us-east-1b"
+      DesiredCapacity: 1
+      MaxSize: 2
+      MinSize: 1
+      LaunchTemplate:
+        LaunchTemplateId: !Ref NewLaunchTemplate
+        Version: "$Latest"
+
+  MyCloudWatchAlarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmName: "newalarm"
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      EvaluationPeriods: 2
+      MetricName: "CPUUtilization"
+      Namespace: "AWS/EC2"
+      Period: 120
+      Statistic: "Average"
+      Threshold: 60
+      AlarmDescription: "This metric monitors ec2 cpu utilization"
+      InsufficientDataActions: []
+
+  MySNSTopic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      Name: "mytopic"
+      KmsMasterKeyId: "bfe2b7d4-cca1-4240-82f7-81ae2b9a55a0"
