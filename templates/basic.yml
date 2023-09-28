@@ -71,7 +71,7 @@ Resources:
         - IpProtocol: "tcp"
           FromPort: 22
           ToPort: 22
-          CidrIp: "192.16.0.0/24"
+          CidrIp: "0.0.0.0/0"
       SecurityGroupEgress:
         - IpProtocol: "-1"
           FromPort: 0
@@ -94,7 +94,7 @@ Resources:
   ExampleInstance:
     Type: "AWS::EC2::Instance"
     Properties:
-      ImageId: "ami-007855asjsjjsjsj"
+      ImageId: "ami-053b0d53c279acc90"
       InstanceType: "t2.micro"
       RootDeviceEncryption:
         Encrypted: true
