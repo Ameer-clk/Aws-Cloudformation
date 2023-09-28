@@ -47,7 +47,7 @@ Resources:
       Name: "terraform-example"
       VirtualizationType: "hvm"
       RootDeviceName: "/dev/xvda"
-      ImageId: "ami-06e46074ae430fba6"
+      ImageId: "ami-053b0d53c279acc90"
       BlockDeviceMappings:
         - DeviceName: "/dev/xvda"
           Ebs:
